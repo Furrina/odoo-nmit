@@ -27,6 +27,11 @@ export default function Dashboard() {
     retry: false,
   });
 
+  const { data: allUserProducts } = useQuery({
+    queryKey: ["/api/user/products?includeSold=true"],
+    retry: false,
+  });
+
   useEffect(() => {
     if (user) {
       setUsername(user.username || "");
@@ -138,10 +143,27 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-foreground" data-testid="heading-dashboard">Dashboard</h1>
-          <Button onClick={() => navigate("/add-product")} className="btn-banner-white" data-testid="button-add-listing">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Listing
-          </Button>
+          <div className="flex space-x-3">
+            <Button 
+              onClick={() => {
+                navigate("/");
+                setTimeout(() => {
+                  const mainSection = document.querySelector('[data-testid="heading-featured"]');
+                  if (mainSection) {
+                    mainSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }} 
+              variant="outline" 
+              data-testid="button-start-shopping"
+            >
+              Start Shopping
+            </Button>
+            <Button onClick={() => navigate("/add-product")} className="btn-banner-white" data-testid="button-add-listing">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Listing
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -229,7 +251,7 @@ export default function Dashboard() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Items Sold</span>
                     <span className="font-semibold text-foreground" data-testid="text-items-sold">
-                      {userProducts?.filter((p: any) => p.status === "sold").length || 0}
+                      {allUserProducts?.filter((p: any) => p.status === "sold").length || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -262,60 +284,103 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {userProducts.map((product: any) => (
-                      <Card key={product.id} className="border border-border">
-                        <CardContent className="p-4">
-                          <img 
-                            src={product.imageUrl || "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200"} 
-                            alt={product.title}
-                            className="w-full h-32 object-cover rounded-md mb-3"
-                            data-testid={`img-product-${product.id}`}
-                          />
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-semibold text-foreground" data-testid={`text-product-title-${product.id}`}>
-                                {product.title}
-                              </h3>
-                              <Badge 
-                                variant={product.status === "active" ? "default" : "secondary"}
-                                data-testid={`badge-status-${product.id}`}
-                              >
-                                {product.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-product-description-${product.id}`}>
-                              {product.description}
-                            </p>
-                            <p className="text-lg font-bold text-primary" data-testid={`text-product-price-${product.id}`}>
-                              ${(product.priceCents / 100).toFixed(2)}
-                            </p>
-                            <div className="flex space-x-2 mt-3">
-                              <Button 
-                                size="sm" 
-                                className="flex-1"
-                                onClick={() => navigate(`/add-product?id=${product.id}`)}
-                                data-testid={`button-edit-${product.id}`}
-                              >
-                                <Edit className="h-3 w-3 mr-1" />
-                                Edit
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="flex-1"
-                                onClick={() => deleteProductMutation.mutate(product.id)}
-                                disabled={deleteProductMutation.isPending}
-                                data-testid={`button-delete-${product.id}`}
-                              >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <div className="space-y-6">
+                    {/* Active Listings */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Active Listings ({userProducts.length})</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {userProducts.map((product: any) => (
+                          <Card key={product.id} className="border border-border">
+                            <CardContent className="p-4">
+                              <img 
+                                src={product.imageUrl || "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200"} 
+                                alt={product.title}
+                                className="w-full h-32 object-cover rounded-md mb-3"
+                                data-testid={`img-product-${product.id}`}
+                              />
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-start">
+                                  <h3 className="font-semibold text-foreground" data-testid={`text-product-title-${product.id}`}>
+                                    {product.title}
+                                  </h3>
+                                  <Badge 
+                                    variant={product.status === "active" ? "default" : "secondary"}
+                                    data-testid={`badge-status-${product.id}`}
+                                  >
+                                    {product.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-product-description-${product.id}`}>
+                                  {product.description}
+                                </p>
+                                <p className="text-lg font-bold text-primary" data-testid={`text-product-price-${product.id}`}>
+                                  ${(product.priceCents / 100).toFixed(2)}
+                                </p>
+                                <div className="flex space-x-2 mt-3">
+                                  <Button 
+                                    size="sm" 
+                                    className="flex-1"
+                                    onClick={() => navigate(`/add-product?id=${product.id}`)}
+                                    data-testid={`button-edit-${product.id}`}
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="flex-1"
+                                    onClick={() => deleteProductMutation.mutate(product.id)}
+                                    disabled={deleteProductMutation.isPending}
+                                    data-testid={`button-delete-${product.id}`}
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sold Items */}
+                    {allUserProducts && allUserProducts.filter((p: any) => p.status === "sold").length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Sold Items ({allUserProducts.filter((p: any) => p.status === "sold").length})</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {allUserProducts.filter((p: any) => p.status === "sold").map((product: any) => (
+                            <Card key={product.id} className="border border-border opacity-75">
+                              <CardContent className="p-4">
+                                <img 
+                                  src={product.imageUrl || "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200"} 
+                                  alt={product.title}
+                                  className="w-full h-32 object-cover rounded-md mb-3 grayscale"
+                                  data-testid={`img-sold-product-${product.id}`}
+                                />
+                                <div className="space-y-2">
+                                  <div className="flex justify-between items-start">
+                                    <h3 className="font-semibold text-foreground" data-testid={`text-sold-product-title-${product.id}`}>
+                                      {product.title}
+                                    </h3>
+                                    <Badge variant="secondary" data-testid={`badge-sold-status-${product.id}`}>
+                                      SOLD
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-sold-product-description-${product.id}`}>
+                                    {product.description}
+                                  </p>
+                                  <p className="text-lg font-bold text-primary" data-testid={`text-sold-product-price-${product.id}`}>
+                                    ${(product.priceCents / 100).toFixed(2)}
+                                  </p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

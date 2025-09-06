@@ -5,11 +5,15 @@ import ProductList from "@/components/ProductList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [groupByCategory, setGroupByCategory] = useState<boolean>(false);
   const [, navigate] = useLocation();
 
   const { data: categories } = useQuery({
@@ -20,6 +24,7 @@ export default function Home() {
   const queryParams = new URLSearchParams();
   if (categoryId) queryParams.append("categoryId", categoryId);
   if (search) queryParams.append("search", search);
+  if (sortBy) queryParams.append("sortBy", sortBy);
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
   const { data: products, isLoading } = useQuery({
@@ -41,7 +46,16 @@ export default function Home() {
               Sustainable shopping that's good for you and the planet
             </p>
             <div className="flex justify-center space-x-4">
-              <Button variant="secondary" data-testid="button-start-shopping">
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  const mainSection = document.querySelector('[data-testid="heading-featured"]');
+                  if (mainSection) {
+                    mainSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                data-testid="button-start-shopping"
+              >
                 Start Shopping
               </Button>
               <Button 
@@ -84,22 +98,35 @@ export default function Home() {
 
       {/* Product Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h2 className="text-2xl font-bold text-foreground" data-testid="heading-featured">Featured Items</h2>
-          <Select>
-            <SelectTrigger className="w-48" data-testid="select-sort">
-              <SelectValue placeholder="Sort by: Newest" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Sort by: Newest</SelectItem>
-              <SelectItem value="price-low">Sort by: Price Low to High</SelectItem>
-              <SelectItem value="price-high">Sort by: Price High to Low</SelectItem>
-              <SelectItem value="popular">Sort by: Most Popular</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="group-by-category"
+                checked={groupByCategory}
+                onCheckedChange={setGroupByCategory}
+                data-testid="switch-group-category"
+              />
+              <Label htmlFor="group-by-category" className="text-sm font-medium">
+                Group by Category
+              </Label>
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-48" data-testid="select-sort">
+                <SelectValue placeholder="Sort by: Newest" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Sort by: Newest</SelectItem>
+                <SelectItem value="price-low">Sort by: Price Low to High</SelectItem>
+                <SelectItem value="price-high">Sort by: Price High to Low</SelectItem>
+                <SelectItem value="popular">Sort by: Most Popular</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <ProductList products={products || []} isLoading={isLoading} />
+        <ProductList products={products || []} isLoading={isLoading} groupByCategory={groupByCategory} />
 
         {/* Load More Button */}
         <div className="text-center mt-12">

@@ -59,8 +59,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Product operations
-  async getProducts(filters?: { categoryId?: number; search?: string; limit?: number; offset?: number }): Promise<Product[]> {
+  async getProducts(filters?: { categoryId?: number; search?: string; limit?: number; offset?: number; sortBy?: string; includeSold?: boolean }): Promise<(Product & { category: { name: string } | null })[]> {
     const where: any = { status: "active" };
+    
+    // If includeSold is false or not specified, only show active products
+    if (!filters?.includeSold) {
+      where.status = "active";
+    }
     
     if (filters?.categoryId) {
       where.categoryId = filters.categoryId;
@@ -69,12 +74,36 @@ export class DatabaseStorage implements IStorage {
     if (filters?.search) {
       where.title = { contains: filters.search, mode: 'insensitive' };
     }
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (filters?.sortBy) {
+      switch (filters.sortBy) {
+        case 'price-low':
+          orderBy = { priceCents: 'asc' };
+          break;
+        case 'price-high':
+          orderBy = { priceCents: 'desc' };
+          break;
+        case 'newest':
+          orderBy = { createdAt: 'desc' };
+          break;
+        case 'popular':
+          // For now, just use newest as we don't have view counts
+          orderBy = { createdAt: 'desc' };
+          break;
+      }
+    }
     
     return await prisma.product.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       take: filters?.limit || 20,
       skip: filters?.offset || 0,
+      include: {
+        category: {
+          select: { name: true }
+        }
+      },
     });
   }
   

@@ -12,6 +12,7 @@ interface ProductCardProps {
     imageUrl: string | null;
     condition: string | null;
     categoryId: number | null;
+    category?: { name: string } | null;
   };
 }
 
@@ -36,7 +37,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       />
       <CardContent className="p-4">
         <Badge variant="secondary" className="mb-2" data-testid={`badge-category-${product.id}`}>
-          Category
+          {product.category?.name || 'Uncategorized'}
         </Badge>
         <h3 className="font-semibold text-foreground mb-1" data-testid={`text-title-${product.id}`}>
           {product.title}
