@@ -12,6 +12,7 @@ import Cart from "@/pages/cart";
 import Orders from "@/pages/orders";
 import Dashboard from "@/pages/dashboard";
 import AddProduct from "@/pages/add-product";
+import TransactionHistory from "@/pages/transaction-history";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/orders" component={Orders} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/add-product" component={AddProduct} />
+          <Route path="/transaction-history" component={TransactionHistory} />
         </>
       )}
       <Route component={NotFound} />

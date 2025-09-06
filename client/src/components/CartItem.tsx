@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface CartItemProps {
   item: {
@@ -24,32 +24,6 @@ export default function CartItem({ item, onUpdate }: CartItemProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const updateQuantityMutation = useMutation({
-    mutationFn: async ({ productId, qty }: { productId: number; qty: number }) => {
-      await apiRequest("PATCH", `/api/cart/${productId}`, { qty });
-    },
-    onSuccess: () => {
-      onUpdate();
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to update cart item.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const removeItemMutation = useMutation({
     mutationFn: async (productId: number) => {
@@ -82,13 +56,6 @@ export default function CartItem({ item, onUpdate }: CartItemProps) {
     },
   });
 
-  const handleQuantityChange = (newQty: number) => {
-    if (newQty <= 0) {
-      removeItemMutation.mutate(item.productId);
-    } else {
-      updateQuantityMutation.mutate({ productId: item.productId, qty: newQty });
-    }
-  };
 
   return (
     <Card data-testid={`cart-item-${item.productId}`}>
@@ -111,31 +78,11 @@ export default function CartItem({ item, onUpdate }: CartItemProps) {
             </p>
           </div>
 
-          {/* Quantity Controls */}
-          <div className="flex items-center space-x-2">
-            <Button 
-              size="sm"
-              variant="outline"
-              className="w-8 h-8 p-0"
-              onClick={() => handleQuantityChange(item.qty - 1)}
-              disabled={updateQuantityMutation.isPending}
-              data-testid={`button-decrease-qty-${item.productId}`}
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <span className="w-8 text-center font-medium" data-testid={`text-cart-qty-${item.productId}`}>
-              {item.qty}
+          {/* Quantity Display (Fixed to 1) */}
+          <div className="flex items-center">
+            <span className="text-sm text-muted-foreground" data-testid={`text-cart-qty-${item.productId}`}>
+              Qty: 1
             </span>
-            <Button 
-              size="sm"
-              variant="outline"
-              className="w-8 h-8 p-0"
-              onClick={() => handleQuantityChange(item.qty + 1)}
-              disabled={updateQuantityMutation.isPending}
-              data-testid={`button-increase-qty-${item.productId}`}
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
           </div>
 
           {/* Remove Button */}

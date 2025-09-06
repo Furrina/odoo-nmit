@@ -11,7 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import { useLocation } from "wouter";
-import { Plus, User, Edit, Trash2 } from "lucide-react";
+import { Plus, User, Edit, Trash2, History } from "lucide-react";
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
@@ -159,6 +159,14 @@ export default function Dashboard() {
             >
               Start Shopping
             </Button>
+            <Button 
+              onClick={() => navigate("/transaction-history")} 
+              variant="outline" 
+              data-testid="button-transaction-history"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Transaction History
+            </Button>
             <Button onClick={() => navigate("/add-product")} className="btn-banner-white" data-testid="button-add-listing">
               <Plus className="h-4 w-4 mr-2" />
               Add New Listing
@@ -245,13 +253,13 @@ export default function Dashboard() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Items Listed</span>
                     <span className="font-semibold text-foreground" data-testid="text-items-listed">
-                      {userProducts?.length || 0}
+                      {Array.isArray(userProducts) ? userProducts.length : 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Items Sold</span>
                     <span className="font-semibold text-foreground" data-testid="text-items-sold">
-                      {allUserProducts?.filter((p: any) => p.status === "sold").length || 0}
+                      {Array.isArray(allUserProducts) ? allUserProducts.filter((p: any) => p.status === "sold").length : 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -273,7 +281,7 @@ export default function Dashboard() {
                   <h2 className="text-xl font-semibold text-foreground" data-testid="heading-my-listings">My Listings</h2>
                 </div>
 
-                {!userProducts || userProducts.length === 0 ? (
+                {!userProducts || !Array.isArray(userProducts) || userProducts.length === 0 ? (
                   <div className="text-center py-12">
                     <h3 className="text-lg font-semibold text-foreground mb-2" data-testid="heading-no-listings">
                       No listings yet
@@ -287,9 +295,9 @@ export default function Dashboard() {
                   <div className="space-y-6">
                     {/* Active Listings */}
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-4">Active Listings ({userProducts.length})</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Active Listings ({Array.isArray(userProducts) ? userProducts.length : 0})</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {userProducts.map((product: any) => (
+                        {Array.isArray(userProducts) && userProducts.map((product: any) => (
                           <Card key={product.id} className="border border-border">
                             <CardContent className="p-4">
                               <img 
@@ -346,7 +354,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Sold Items */}
-                    {allUserProducts && allUserProducts.filter((p: any) => p.status === "sold").length > 0 && (
+                    {Array.isArray(allUserProducts) && allUserProducts.filter((p: any) => p.status === "sold").length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-4">Sold Items ({allUserProducts.filter((p: any) => p.status === "sold").length})</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
