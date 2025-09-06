@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,13 @@ import CartItem from "@/components/CartItem";
 import { useLocation } from "wouter";
 import { Shield } from "lucide-react";
 
+// Declare Razorpay type for TypeScript
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function Cart() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -19,39 +26,129 @@ export default function Cart() {
   const { data: cartData, isLoading } = useQuery({
     queryKey: ["/api/cart"],
   });
-  
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/orders", {});
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Create Razorpay order mutation
+  const createOrderMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      return await apiRequest("POST", "/api/payment/create-order", { amount });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create payment order. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Verify payment mutation
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async (paymentData: any) => {
+      return await apiRequest("POST", "/api/payment/verify", paymentData);
     },
     onSuccess: () => {
       toast({
-        title: "Order placed successfully!",
-        description: "Your order has been confirmed and will be processed soon.",
+        title: "Payment successful!",
+        description: "Your order has been placed successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
       navigate("/orders");
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
-        title: "Error",
-        description: "Failed to place order. Please try again.",
+        title: "Payment failed",
+        description: "Payment verification failed. Please try again.",
         variant: "destructive",
       });
     },
   });
+
+  // Handle payment with Razorpay
+  const handlePayment = async () => {
+    if (!cartData || !(cartData as any).items || (cartData as any).items.length === 0) {
+      toast({
+        title: "Error",
+        description: "Your cart is empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const items = (cartData as any).items;
+    const subtotal = items.reduce((total: number, item: any) => 
+      total + (item.product.priceCents * item.qty), 0);
+    const tax = Math.round(subtotal * 0.08);
+    const total = subtotal + tax;
+
+    try {
+      // Create Razorpay order
+      const orderData = await createOrderMutation.mutateAsync(total);
+      
+      if (!window.Razorpay) {
+        toast({
+          title: "Error",
+          description: "Razorpay is not loaded. Please refresh the page.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const options = {
+        key: "rzp_test_1DP5mmOlF5G5ag", // Replace with your actual Razorpay key
+        amount: total,
+        currency: "INR",
+        name: "EcoFinds",
+        description: "Payment for your order",
+        order_id: (orderData as any).id,
+        handler: async function (response: any) {
+          try {
+            await verifyPaymentMutation.mutateAsync({
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            });
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+          }
+        },
+        prefill: {
+          name: "Customer",
+          email: "customer@example.com",
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#22c55e"
+        },
+        modal: {
+          ondismiss: function() {
+            toast({
+              title: "Payment cancelled",
+              description: "Payment was cancelled by user.",
+              variant: "destructive",
+            });
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,7 +170,7 @@ export default function Cart() {
     );
   }
 
-  const items = cartData?.items || [];
+  const items = (cartData as any)?.items || [];
   const subtotal = items.reduce((total: number, item: any) => 
     total + (item.product.priceCents * item.qty), 0);
   const tax = Math.round(subtotal * 0.08);
@@ -147,11 +244,11 @@ export default function Cart() {
                   <Button 
                     className="w-full mb-4" 
                     size="lg"
-                    onClick={() => checkoutMutation.mutate()}
-                    disabled={checkoutMutation.isPending}
+                    onClick={handlePayment}
+                    disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}
                     data-testid="button-checkout"
                   >
-                    {checkoutMutation.isPending ? "Processing..." : "Proceed to Checkout"}
+                    {createOrderMutation.isPending || verifyPaymentMutation.isPending ? "Processing..." : "Pay with Razorpay"}
                   </Button>
                   
                   <Button 
@@ -167,7 +264,7 @@ export default function Cart() {
                   <div className="mt-6 p-4 bg-muted rounded-lg">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Shield className="h-4 w-4 text-accent mr-2" />
-                      Secure checkout powered by Stripe
+                      Secure checkout powered by Razorpay
                     </div>
                   </div>
                 </CardContent>

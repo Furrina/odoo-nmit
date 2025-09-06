@@ -49,7 +49,6 @@ export default function Landing() {
           await refetch();
           window.location.href = "/";
         } else {
-          // After successful registration, switch to login tab
           setIsLogin(true);
           setFormData({
             email: formData.email,
@@ -65,7 +64,7 @@ export default function Landing() {
         const data = await response.json();
         setError(data.message || "An error occurred");
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsLoading(false);
@@ -80,8 +79,8 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 landing-background">
-      <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm">
+    <div className="landing-background min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-xl">
         <CardContent className="pt-6">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -91,7 +90,7 @@ export default function Landing() {
               Welcome to EcoFinds
             </h2>
             <p className="mt-2 text-sm text-muted-foreground" data-testid="text-subtitle">
-              Sustainable shopping for a better tomorrow
+             
             </p>
           </div>
           
@@ -121,28 +120,24 @@ export default function Landing() {
 
           {isLogin ? (
             <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-signin">
-              <div>
-                <Input 
-                  type="email" 
-                  name="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-email"
-                />
-              </div>
-              <div>
-                <Input 
-                  type="password" 
-                  name="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-password"
-                />
-              </div>
+              <Input 
+                type="email" 
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                data-testid="input-email"
+              />
+              <Input 
+                type="password" 
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                data-testid="input-password"
+              />
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -187,50 +182,42 @@ export default function Landing() {
                   data-testid="input-lastname"
                 />
               </div>
-              <div>
-                <Input 
-                  type="email" 
-                  name="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-signup-email"
-                />
-              </div>
-              <div>
-                <Input 
-                  type="text" 
-                  name="username"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-username"
-                />
-              </div>
-              <div>
-                <Input 
-                  type="password" 
-                  name="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-signup-password"
-                />
-              </div>
-              <div>
-                <Input 
-                  type="password" 
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  data-testid="input-confirm-password"
-                />
-              </div>
+              <Input 
+                type="email" 
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                data-testid="input-signup-email"
+              />
+              <Input 
+                type="text" 
+                name="username"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleInputChange}
+                required
+                data-testid="input-username"
+              />
+              <Input 
+                type="password" 
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                data-testid="input-signup-password"
+              />
+              <Input 
+                type="password" 
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                required
+                data-testid="input-confirm-password"
+              />
               
               <div className="flex items-center space-x-2">
                 <Checkbox id="terms" required data-testid="checkbox-terms" />

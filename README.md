@@ -1,9 +1,27 @@
+<<<<<<< HEAD
 # EcoFinds - Sustainable E-commerce Marketplace
+=======
+# __Problem Statement:__ _EcoFinds - Sustainable E-commerce Marketplace_
+>>>>>>> dd0a540bcd03b1fba8425a28052a01a951dc8307
 
 ![EcoFinds Logo](https://img.shields.io/badge/EcoFinds-Sustainable%20Shopping-green?style=for-the-badge&logo=leaf)
 
 EcoFinds is a modern, sustainable e-commerce marketplace focused on pre-loved items. It's a full-stack web application that allows users to buy and sell second-hand goods, promoting sustainable shopping practices and reducing waste.
 
+<<<<<<< HEAD
+=======
+ ### Team: ___HackOps___
+---
+ <!-- ### <ins>__Team members with email__</ins>  -->
+ 
+| Name | Email |  
+| :-------| -----|  
+| Aryan Dawra | aryandawra2020@gmail.com |
+| Reyan Shah | reyanshah016@gmail.com|
+| Rutvij Borisagar | rutvijborisagar@gmail.com |
+| Rian Lavingia | rianlavingia@gmail.com|
+
+>>>>>>> dd0a540bcd03b1fba8425a28052a01a951dc8307
 ## 🌱 Features
 
 ### Core Functionality
@@ -238,6 +256,7 @@ npm run start
 - Use secure `SESSION_SECRET`
 - Configure production database URL
 - Set up Razorpay production keys
+<<<<<<< HEAD
 
 ## 🤝 Contributing
 
@@ -270,3 +289,6 @@ If you have any questions or need help with the project, please:
 ---
 
 **Made with ❤️ for a sustainable future** 🌱
+=======
+    
+>>>>>>> dd0a540bcd03b1fba8425a28052a01a951dc8307
