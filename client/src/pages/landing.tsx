@@ -80,8 +80,8 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 landing-background">
+      <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm">
         <CardContent className="pt-6">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">

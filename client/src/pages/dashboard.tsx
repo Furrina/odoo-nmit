@@ -138,7 +138,7 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-foreground" data-testid="heading-dashboard">Dashboard</h1>
-          <Button onClick={() => navigate("/add-product")} data-testid="button-add-listing">
+          <Button onClick={() => navigate("/add-product")} className="btn-banner-white" data-testid="button-add-listing">
             <Plus className="h-4 w-4 mr-2" />
             Add New Listing
           </Button>
@@ -257,7 +257,7 @@ export default function Dashboard() {
                       No listings yet
                     </h3>
                     <p className="text-muted-foreground mb-4">Start selling by creating your first listing</p>
-                    <Button onClick={() => navigate("/add-product")} data-testid="button-create-first-listing">
+                    <Button onClick={() => navigate("/add-product")} className="btn-banner-white" data-testid="button-create-first-listing">
                       Create Your First Listing
                     </Button>
                   </div>
