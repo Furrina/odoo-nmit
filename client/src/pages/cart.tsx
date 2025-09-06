@@ -19,7 +19,7 @@ export default function Cart() {
   const { data: cartData, isLoading } = useQuery({
     queryKey: ["/api/cart"],
   });
-
+  
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/orders", {});
