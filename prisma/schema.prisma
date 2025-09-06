@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String?  @unique
+  firstName       String?  @map("first_name")
+  lastName        String?  @map("last_name")
+  profileImageUrl String?  @map("profile_image_url")
+  username        String?  @unique
+  bio             String?
+  password        String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  ownerId     String   @map("owner_id")
+  title       String
+  description String?
+  categoryId  Int?     @map("category_id")
+  priceCents  Int      @map("price_cents")
+  imageUrl    String?  @map("image_url")
+  condition   String   @default("good")
+  location    String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("products")
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("carts")
+}
+
+model CartItem {
+  cartId    Int @map("cart_id")
+  productId Int @map("product_id")
+  qty       Int @default(1)
+
+  @@id([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  userId     String   @map("user_id")
+  totalCents Int      @map("total_cents")
+  status     String   @default("completed")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("orders")
+}
+
+model OrderItem {
+  orderId    Int @map("order_id")
+  productId  Int @map("product_id")
+  qty        Int
+  priceCents Int @map("price_cents")
+
+  @@id([orderId, productId])
+  @@map("order_items")
+}

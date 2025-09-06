@@ -1,45 +1,25 @@
-import {
-  users,
-  products,
-  categories,
-  carts,
-  cartItems,
-  orders,
-  orderItems,
-  type User,
-  type UpsertUser,
-  type Product,
-  type InsertProduct,
-  type Category,
-  type Cart,
-  type CartItem,
-  type InsertCartItem,
-  type Order,
-  type OrderItem,
-  type InsertOrder,
-  type InsertOrderItem,
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { prisma } from "./db";
+import type { User, Product, Category, Cart, CartItem, Order, OrderItem } from "@prisma/client";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  // User operations
+  getUser(id: string): Promise<User | null>;
+  getUserByEmail(email: string): Promise<User | null>;
+  upsertUser(user: Partial<User>): Promise<User>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
   
   // Product operations
   getProducts(filters?: { categoryId?: number; search?: string; limit?: number; offset?: number }): Promise<Product[]>;
-  getProduct(id: number): Promise<Product | undefined>;
-  createProduct(product: InsertProduct & { ownerId: string }): Promise<Product>;
-  updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product>;
+  getProduct(id: number): Promise<Product | null>;
+  createProduct(product: Omit<Product, 'id' | 'createdAt'>): Promise<Product>;
+  updateProduct(id: number, product: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
   getUserProducts(userId: string): Promise<Product[]>;
   
   // Cart operations
-  getCart(userId: string): Promise<Cart | undefined>;
+  getCart(userId: string): Promise<Cart | null>;
   getCartWithItems(userId: string): Promise<{ cart: Cart; items: (CartItem & { product: Product })[] } | null>;
   addToCart(userId: string, productId: number, qty: number): Promise<CartItem>;
   updateCartItem(userId: string, productId: number, qty: number): Promise<CartItem>;
@@ -48,113 +28,95 @@ export interface IStorage {
   
   // Order operations
   getUserOrders(userId: string): Promise<(Order & { items: (OrderItem & { product: Product })[] })[]>;
-  createOrder(order: InsertOrder & { items: InsertOrderItem[] }): Promise<Order>;
+  createOrder(order: Omit<Order, 'id' | 'createdAt'> & { items: Omit<OrderItem, 'orderId'>[] }): Promise<Order>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUser(id: string): Promise<User | null> {
+    return await prisma.user.findUnique({ where: { id } });
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+  async getUserByEmail(email: string): Promise<User | null> {
+    return await prisma.user.findUnique({ where: { email } });
+  }
+
+  async upsertUser(userData: Partial<User>): Promise<User> {
+    if (userData.id) {
+      return await prisma.user.upsert({
+        where: { id: userData.id },
+        update: { ...userData, updatedAt: new Date() },
+        create: userData as User,
+      });
+    } else {
+      return await prisma.user.create({ data: userData as User });
+    }
   }
   
   // Category operations
   async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+    return await prisma.category.findMany();
   }
   
   // Product operations
   async getProducts(filters?: { categoryId?: number; search?: string; limit?: number; offset?: number }): Promise<Product[]> {
-    let query = db.select().from(products);
-    const conditions = [eq(products.status, "active")];
+    const where: any = { status: "active" };
     
     if (filters?.categoryId) {
-      conditions.push(eq(products.categoryId, filters.categoryId));
+      where.categoryId = filters.categoryId;
     }
     
     if (filters?.search) {
-      conditions.push(sql`${products.title} ILIKE ${'%' + filters.search + '%'}`);
+      where.title = { contains: filters.search, mode: 'insensitive' };
     }
     
-    query = query.where(and(...conditions)).orderBy(desc(products.createdAt));
-    
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-    }
-    
-    if (filters?.offset) {
-      query = query.offset(filters.offset);
-    }
-    
-    return await query;
+    return await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: filters?.limit || 20,
+      skip: filters?.offset || 0,
+    });
   }
   
-  async getProduct(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
-    return product;
+  async getProduct(id: number): Promise<Product | null> {
+    return await prisma.product.findUnique({ where: { id } });
   }
   
-  async createProduct(product: InsertProduct & { ownerId: string }): Promise<Product> {
-    const [newProduct] = await db.insert(products).values(product).returning();
-    return newProduct;
+  async createProduct(product: Omit<Product, 'id' | 'createdAt'>): Promise<Product> {
+    return await prisma.product.create({ data: product });
   }
   
-  async updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product> {
-    const [updatedProduct] = await db
-      .update(products)
-      .set(product)
-      .where(eq(products.id, id))
-      .returning();
-    return updatedProduct;
+  async updateProduct(id: number, product: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product> {
+    return await prisma.product.update({ where: { id }, data: product });
   }
   
   async deleteProduct(id: number): Promise<void> {
-    await db.delete(products).where(eq(products.id, id));
+    await prisma.product.delete({ where: { id } });
   }
   
   async getUserProducts(userId: string): Promise<Product[]> {
-    return await db.select().from(products).where(eq(products.ownerId, userId)).orderBy(desc(products.createdAt));
+    return await prisma.product.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
   
   // Cart operations
-  async getCart(userId: string): Promise<Cart | undefined> {
-    const [cart] = await db.select().from(carts).where(eq(carts.userId, userId));
-    return cart;
+  async getCart(userId: string): Promise<Cart | null> {
+    return await prisma.cart.findUnique({ where: { userId } });
   }
   
   async getCartWithItems(userId: string): Promise<{ cart: Cart; items: (CartItem & { product: Product })[] } | null> {
     let cart = await this.getCart(userId);
     
     if (!cart) {
-      // Create cart if it doesn't exist
-      [cart] = await db.insert(carts).values({ userId }).returning();
+      cart = await prisma.cart.create({ data: { userId } });
     }
     
-    const items = await db
-      .select({
-        cartId: cartItems.cartId,
-        productId: cartItems.productId,
-        qty: cartItems.qty,
-        product: products,
-      })
-      .from(cartItems)
-      .innerJoin(products, eq(cartItems.productId, products.id))
-      .where(eq(cartItems.cartId, cart.id));
+    const items = await prisma.cartItem.findMany({
+      where: { cartId: cart.id },
+      include: { product: true },
+    });
     
     return { cart, items };
   }
@@ -163,28 +125,23 @@ export class DatabaseStorage implements IStorage {
     let cart = await this.getCart(userId);
     
     if (!cart) {
-      [cart] = await db.insert(carts).values({ userId }).returning();
+      cart = await prisma.cart.create({ data: { userId } });
     }
     
     // Try to update existing item first
-    const [existingItem] = await db
-      .select()
-      .from(cartItems)
-      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
+    const existingItem = await prisma.cartItem.findUnique({
+      where: { cartId_productId: { cartId: cart.id, productId } },
+    });
     
     if (existingItem) {
-      const [updatedItem] = await db
-        .update(cartItems)
-        .set({ qty: existingItem.qty + qty })
-        .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)))
-        .returning();
-      return updatedItem;
+      return await prisma.cartItem.update({
+        where: { cartId_productId: { cartId: cart.id, productId } },
+        data: { qty: existingItem.qty + qty },
+      });
     } else {
-      const [newItem] = await db
-        .insert(cartItems)
-        .values({ cartId: cart.id, productId, qty })
-        .returning();
-      return newItem;
+      return await prisma.cartItem.create({
+        data: { cartId: cart.id, productId, qty },
+      });
     }
   }
   
@@ -192,71 +149,52 @@ export class DatabaseStorage implements IStorage {
     const cart = await this.getCart(userId);
     if (!cart) throw new Error("Cart not found");
     
-    const [updatedItem] = await db
-      .update(cartItems)
-      .set({ qty })
-      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)))
-      .returning();
-    return updatedItem;
+    return await prisma.cartItem.update({
+      where: { cartId_productId: { cartId: cart.id, productId } },
+      data: { qty },
+    });
   }
   
   async removeFromCart(userId: string, productId: number): Promise<void> {
     const cart = await this.getCart(userId);
     if (!cart) return;
     
-    await db
-      .delete(cartItems)
-      .where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
+    await prisma.cartItem.delete({
+      where: { cartId_productId: { cartId: cart.id, productId } },
+    });
   }
   
   async clearCart(userId: string): Promise<void> {
     const cart = await this.getCart(userId);
     if (!cart) return;
     
-    await db.delete(cartItems).where(eq(cartItems.cartId, cart.id));
+    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
   }
   
   // Order operations
   async getUserOrders(userId: string): Promise<(Order & { items: (OrderItem & { product: Product })[] })[]> {
-    const userOrders = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.userId, userId))
-      .orderBy(desc(orders.createdAt));
-    
-    const ordersWithItems = await Promise.all(
-      userOrders.map(async (order) => {
-        const items = await db
-          .select({
-            orderId: orderItems.orderId,
-            productId: orderItems.productId,
-            qty: orderItems.qty,
-            priceCents: orderItems.priceCents,
-            product: products,
-          })
-          .from(orderItems)
-          .innerJoin(products, eq(orderItems.productId, products.id))
-          .where(eq(orderItems.orderId, order.id));
-        
-        return { ...order, items };
-      })
-    );
-    
-    return ordersWithItems;
+    return await prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+    });
   }
   
-  async createOrder(orderData: InsertOrder & { items: InsertOrderItem[] }): Promise<Order> {
+  async createOrder(orderData: Omit<Order, 'id' | 'createdAt'> & { items: Omit<OrderItem, 'orderId'>[] }): Promise<Order> {
     const { items, ...order } = orderData;
     
-    const [newOrder] = await db.insert(orders).values(order).returning();
-    
-    if (items.length > 0) {
-      await db.insert(orderItems).values(
-        items.map(item => ({ ...item, orderId: newOrder.id }))
-      );
-    }
-    
-    return newOrder;
+    return await prisma.order.create({
+      data: {
+        ...order,
+        items: {
+          create: items,
+        },
+      },
+    });
   }
 }
 

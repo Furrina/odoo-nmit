@@ -1,10 +1,26 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertProductSchema, insertCartItemSchema, categories } from "@shared/schema";
-import { db } from "./db";
+import { setupAuth, isAuthenticated } from "./auth";
+import { prisma } from "./db";
 import { z } from "zod";
+
+// Validation schemas
+const insertProductSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  categoryId: z.number().optional(),
+  priceCents: z.number().min(0),
+  imageUrl: z.string().optional(),
+  condition: z.string().optional(),
+  location: z.string().optional(),
+  status: z.string().optional(),
+});
+
+const insertCartItemSchema = z.object({
+  productId: z.number(),
+  qty: z.number().min(1).default(1),
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -13,26 +29,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed categories if they don't exist
   const existingCategories = await storage.getCategories();
   if (existingCategories.length === 0) {
-    await Promise.all([
-      db.insert(categories).values({ name: "Electronics" }),
-      db.insert(categories).values({ name: "Clothing" }),
-      db.insert(categories).values({ name: "Books" }),
-      db.insert(categories).values({ name: "Home" }),
-      db.insert(categories).values({ name: "Misc" }),
-    ]);
+    await prisma.category.createMany({
+      data: [
+        { name: "Electronics" },
+        { name: "Clothing" },
+        { name: "Books" },
+        { name: "Home" },
+        { name: "Misc" },
+      ],
+    });
   }
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Auth routes are now handled in auth.ts
 
   // Category routes
   app.get('/api/categories', async (req, res) => {
@@ -83,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/products', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productData = insertProductSchema.parse(req.body);
       
       const product = await storage.createProduct({
@@ -103,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       
       // Check if user owns the product
@@ -127,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       
       // Check if user owns the product
@@ -146,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/user/products', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const products = await storage.getUserProducts(userId);
       res.json(products);
     } catch (error) {
@@ -158,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cart routes
   app.get('/api/cart', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const cartData = await storage.getCartWithItems(userId);
       res.json(cartData);
     } catch (error) {
@@ -169,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cart', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { productId, qty = 1 } = insertCartItemSchema.parse(req.body);
       
       const cartItem = await storage.addToCart(userId, productId, qty);
@@ -185,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/cart/:productId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.productId);
       const { qty } = req.body;
       
@@ -204,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/cart/:productId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.productId);
       
       await storage.removeFromCart(userId, productId);
@@ -217,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/cart', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       await storage.clearCart(userId);
       res.status(204).send();
     } catch (error) {
@@ -229,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Order routes
   app.get('/api/orders', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const orders = await storage.getUserOrders(userId);
       res.json(orders);
     } catch (error) {
@@ -240,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/orders', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Get current cart
       const cartData = await storage.getCartWithItems(userId);
@@ -280,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile routes
   app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { username, bio } = req.body;
       
       const updatedUser = await storage.upsertUser({

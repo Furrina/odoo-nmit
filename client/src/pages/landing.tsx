@@ -4,9 +4,66 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Leaf } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
   const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    username: "",
+    confirmPassword: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { refetch } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const url = isLogin ? "/api/auth/login" : "/api/auth/register";
+      const body = isLogin 
+        ? { email: formData.email, password: formData.password }
+        : {
+            email: formData.email,
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            username: formData.username,
+          };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        await refetch();
+        window.location.href = "/";
+      } else {
+        const data = await response.json();
+        setError(data.message || "An error occurred");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
@@ -42,12 +99,21 @@ export default function Landing() {
             </button>
           </div>
 
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm mb-4">
+              {error}
+            </div>
+          )}
+
           {isLogin ? (
-            <form className="space-y-4" data-testid="form-signin">
+            <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-signin">
               <div>
                 <Input 
                   type="email" 
+                  name="email"
                   placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-email"
                 />
@@ -55,7 +121,10 @@ export default function Landing() {
               <div>
                 <Input 
                   type="password" 
+                  name="password"
                   placeholder="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-password"
                 />
@@ -74,28 +143,43 @@ export default function Landing() {
               </div>
 
               <Button 
-                type="button" 
+                type="submit" 
                 className="w-full"
-                onClick={() => window.location.href = "/api/login"}
+                disabled={isLoading}
                 data-testid="button-signin"
               >
-                Sign In
+                {isLoading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
           ) : (
-            <form className="space-y-4" data-testid="form-signup">
-              <div>
+            <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-signup">
+              <div className="grid grid-cols-2 gap-4">
                 <Input 
                   type="text" 
-                  placeholder="Full Name"
+                  name="firstName"
+                  placeholder="First Name"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
                   required
-                  data-testid="input-fullname"
+                  data-testid="input-firstname"
+                />
+                <Input 
+                  type="text" 
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  required
+                  data-testid="input-lastname"
                 />
               </div>
               <div>
                 <Input 
                   type="email" 
+                  name="email"
                   placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-signup-email"
                 />
@@ -103,7 +187,10 @@ export default function Landing() {
               <div>
                 <Input 
                   type="text" 
+                  name="username"
                   placeholder="Username"
+                  value={formData.username}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-username"
                 />
@@ -111,7 +198,10 @@ export default function Landing() {
               <div>
                 <Input 
                   type="password" 
+                  name="password"
                   placeholder="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-signup-password"
                 />
@@ -119,7 +209,10 @@ export default function Landing() {
               <div>
                 <Input 
                   type="password" 
+                  name="confirmPassword"
                   placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
                   required
                   data-testid="input-confirm-password"
                 />
@@ -133,12 +226,12 @@ export default function Landing() {
               </div>
 
               <Button 
-                type="button" 
+                type="submit" 
                 className="w-full"
-                onClick={() => window.location.href = "/api/login"}
+                disabled={isLoading}
                 data-testid="button-signup"
               >
-                Create Account
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
           )}
