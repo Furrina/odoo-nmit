@@ -115,10 +115,19 @@ export class DatabaseStorage implements IStorage {
     
     const items = await prisma.cartItem.findMany({
       where: { cartId: cart.id },
-      include: { product: true },
     });
     
-    return { cart, items };
+    // Fetch products separately
+    const itemsWithProducts = await Promise.all(
+      items.map(async (item) => {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+        });
+        return { ...item, product: product! };
+      })
+    );
+    
+    return { cart, items: itemsWithProducts };
   }
   
   async addToCart(userId: string, productId: number, qty: number): Promise<CartItem> {
@@ -173,15 +182,32 @@ export class DatabaseStorage implements IStorage {
   
   // Order operations
   async getUserOrders(userId: string): Promise<(Order & { items: (OrderItem & { product: Product })[] })[]> {
-    return await prisma.order.findMany({
+    const orders = await prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: {
-        items: {
-          include: { product: true },
-        },
-      },
     });
+    
+    // Fetch order items and products separately
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        const orderItems = await prisma.orderItem.findMany({
+          where: { orderId: order.id },
+        });
+        
+        const itemsWithProducts = await Promise.all(
+          orderItems.map(async (item) => {
+            const product = await prisma.product.findUnique({
+              where: { id: item.productId },
+            });
+            return { ...item, product: product! };
+          })
+        );
+        
+        return { ...order, items: itemsWithProducts };
+      })
+    );
+    
+    return ordersWithItems;
   }
   
   async createOrder(orderData: Omit<Order, 'id' | 'createdAt'> & { items: Omit<OrderItem, 'orderId'>[] }): Promise<Order> {

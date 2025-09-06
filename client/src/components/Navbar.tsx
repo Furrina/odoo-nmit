@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,7 @@ interface NavbarProps {
 export default function Navbar({ search, onSearchChange }: NavbarProps) {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: cartData } = useQuery({
     queryKey: ["/api/cart"],
@@ -22,6 +23,19 @@ export default function Navbar({ search, onSearchChange }: NavbarProps) {
   });
 
   const cartItemCount = cartData?.items?.reduce((total: number, item: any) => total + item.qty, 0) || 0;
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      queryClient.clear();
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50">
@@ -87,7 +101,7 @@ export default function Navbar({ search, onSearchChange }: NavbarProps) {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => window.location.href = "/api/logout"}
+                  onClick={handleLogout}
                   data-testid="button-logout"
                 >
                   <LogOut className="h-4 w-4" />
