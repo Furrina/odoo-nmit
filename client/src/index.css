@@ -129,7 +129,7 @@
 
 /* Landing page background styles */
 .landing-background {
-  background-image: url('https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080');
+  background-image: url('Eco-Image.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -144,8 +144,8 @@
   right: 0;
   bottom: 0;
   background: inherit;
-  filter: blur(8px);
-  transform: scale(1.1);
+  filter: blur(4px);
+  transform: scale(1.05);
   z-index: -1;
 }
 
@@ -176,4 +176,78 @@
   background-color: white;
   color: black;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Home page hero button styles */
+.btn-hero-white {
+  background-color: white;
+  color: black;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-hero-white:hover {
+  background-color: #f9fafb;
+  color: black;
+}
+
+.btn-hero-white:focus {
+  background-color: white;
+  color: black;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Home page hero section background styles */
+.hero-background {
+  background-image: url('Dashboard_image.tsx');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.hero-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(1px);
+  transform: scale(1.02);
+  z-index: -1;
+}
+
+.hero-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: -1;
+}
+
+/* Category pills styles */
+.category-pill {
+  background-color: #22c55e;
+  color: white;
+  border: 1px solid #22c55e;
+}
+
+.category-pill:hover {
+  background-color: #16a34a;
+  color: white;
+}
+
+.category-pill-outline {
+  background-color: transparent;
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.category-pill-outline:hover {
+  background-color: #22c55e;
+  color: white;
 }

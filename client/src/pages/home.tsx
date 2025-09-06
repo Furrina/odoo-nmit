@@ -31,7 +31,7 @@ export default function Home() {
       <Navbar search={search} onSearchChange={setSearch} />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary to-accent">
+      <div className="hero-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4" data-testid="heading-hero">
@@ -41,12 +41,12 @@ export default function Home() {
               Sustainable shopping that's good for you and the planet
             </p>
             <div className="flex justify-center space-x-4">
-              <Button variant="secondary" data-testid="button-start-shopping">
+              <Button variant="secondary" className="btn-hero-white" data-testid="button-start-shopping">
                 Start Shopping
               </Button>
               <Button 
                 variant="outline" 
-                className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                className="btn-hero-white"
                 onClick={() => navigate("/add-product")}
                 data-testid="button-sell-items"
               >
@@ -62,7 +62,7 @@ export default function Home() {
         <div className="flex flex-wrap gap-4 justify-center">
           <Button 
             variant={categoryId === "" ? "default" : "outline"}
-            className="rounded-full"
+            className={`rounded-full ${categoryId === "" ? "category-pill" : "category-pill-outline"}`}
             onClick={() => setCategoryId("")}
             data-testid="button-category-all"
           >
@@ -72,7 +72,7 @@ export default function Home() {
             <Button 
               key={category.id}
               variant={categoryId === category.id.toString() ? "default" : "outline"}
-              className="rounded-full"
+              className={`rounded-full ${categoryId === category.id.toString() ? "category-pill" : "category-pill-outline"}`}
               onClick={() => setCategoryId(category.id.toString())}
               data-testid={`button-category-${category.name.toLowerCase()}`}
             >
