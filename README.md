@@ -1,8 +1,19 @@
-# EcoFinds - Sustainable E-commerce Marketplace
+# __Problem Statement:__ _EcoFinds - Sustainable E-commerce Marketplace_
 
 ![EcoFinds Logo](https://img.shields.io/badge/EcoFinds-Sustainable%20Shopping-green?style=for-the-badge&logo=leaf)
 
 EcoFinds is a modern, sustainable e-commerce marketplace focused on pre-loved items. It's a full-stack web application that allows users to buy and sell second-hand goods, promoting sustainable shopping practices and reducing waste.
+
+ ### Team: ___Epoch Wizards___
+---
+ <!-- ### <ins>__Team members with email__</ins>  -->
+ 
+| Name | Email |  
+| :-------| -----|  
+| Aryan Dawra | aryandawra2020@gmail.com |
+| Reyan Shah | reyanshah016@gmail.com|
+| Rutvij Borisagar | rutvijborisagar@gmail.com |
+| Rian Lavingia | rianlavingia@gmail.com|
 
 ## 🌱 Features
 
@@ -238,35 +249,4 @@ npm run start
 - Use secure `SESSION_SECRET`
 - Configure production database URL
 - Set up Razorpay production keys
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Shadcn/ui** for the beautiful UI components
-- **Tailwind CSS** for the utility-first CSS framework
-- **Prisma** for the excellent ORM
-- **Razorpay** for payment processing
-- **React** and **Express** communities for the amazing tools
-
-## 📞 Support
-
-If you have any questions or need help with the project, please:
-
-1. Check the [Issues](https://github.com/your-repo/issues) page
-2. Create a new issue with detailed information
-3. Contact the development team
-
----
-
-**Made with ❤️ for a sustainable future** 🌱
+    
