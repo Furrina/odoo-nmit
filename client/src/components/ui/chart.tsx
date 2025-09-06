@@ -208,7 +208,7 @@ const ChartTooltipContent = React.forwardRef<
                       !hideIndicator && (
                         <div
                           className={cn(
-                            "shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]",
+                            "shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg] chart-indicator-border",
                             {
                               "h-2.5 w-2.5": indicator === "dot",
                               "w-1": indicator === "line",
@@ -219,8 +219,7 @@ const ChartTooltipContent = React.forwardRef<
                           )}
                           style={
                             {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
+                              "--indicator-color": indicatorColor,
                             } as React.CSSProperties
                           }
                         />
@@ -300,10 +299,10 @@ const ChartLegendContent = React.forwardRef<
                 <itemConfig.icon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className="h-2 w-2 shrink-0 rounded-[2px] chart-indicator-color"
                   style={{
-                    backgroundColor: item.color,
-                  }}
+                    "--indicator-color": item.color,
+                  } as React.CSSProperties}
                 />
               )}
               {itemConfig?.label}

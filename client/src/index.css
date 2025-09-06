@@ -97,3 +97,83 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Progress component styles */
+.progress-indicator {
+  transform: translateX(var(--progress-value, -100%));
+}
+
+/* Chart component styles */
+.chart-indicator-color {
+  background-color: var(--indicator-color);
+}
+
+.chart-indicator-border {
+  --color-bg: var(--indicator-color);
+  --color-border: var(--indicator-color);
+}
+
+/* Sidebar component styles */
+.sidebar-container {
+  --sidebar-width: var(--sidebar-width-value);
+  --sidebar-width-icon: var(--sidebar-width-icon-value);
+}
+
+.sidebar-mobile {
+  --sidebar-width: var(--sidebar-width-mobile-value);
+}
+
+.sidebar-skeleton {
+  --skeleton-width: var(--skeleton-width-value);
+}
+
+/* Landing page background styles */
+.landing-background {
+  background-image: url('https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.landing-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(8px);
+  transform: scale(1.1);
+  z-index: -1;
+}
+
+.landing-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+}
+
+/* Dashboard banner button styles */
+.btn-banner-white {
+  background-color: white;
+  color: black;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-banner-white:hover {
+  background-color: #f9fafb;
+  color: black;
+}
+
+.btn-banner-white:focus {
+  background-color: white;
+  color: black;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
