@@ -26,16 +26,25 @@ export default function ProductForm() {
     imageUrl: "",
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
   });
 
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
+      let imageUrl = data.imageUrl;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+      
       await apiRequest("POST", "/api/products", {
         ...data,
         priceCents: Math.round(parseFloat(data.priceCents) * 100),
         categoryId: data.categoryId ? parseInt(data.categoryId) : null,
+        imageUrl,
       });
     },
     onSuccess: () => {
@@ -81,6 +90,30 @@ export default function ProductForm() {
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    // For now, we'll use a placeholder service or convert to base64
+    // In a real app, you'd upload to a service like Cloudinary, AWS S3, etc.
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   return (

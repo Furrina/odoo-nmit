@@ -22,12 +22,17 @@ model User {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  products Product[]
+  cart     Cart?
+  orders   Order[]
+
   @@map("users")
 }
 
 model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
+  products  Product[]
 
   @@map("categories")
 }
@@ -45,6 +50,11 @@ model Product {
   status      String   @default("active")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  owner     User        @relation(fields: [ownerId], references: [id], onDelete: NoAction)
+  category  Category?   @relation(fields: [categoryId], references: [id], onDelete: NoAction)
+  cartItems CartItem[]
+  orderItems OrderItem[]
+
   @@map("products")
 }
 
@@ -53,6 +63,9 @@ model Cart {
   userId    String   @unique @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
+  user  User       @relation(fields: [userId], references: [id], onDelete: NoAction)
+  items CartItem[]
+
   @@map("carts")
 }
 
@@ -60,6 +73,9 @@ model CartItem {
   cartId    Int @map("cart_id")
   productId Int @map("product_id")
   qty       Int @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: NoAction)
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction)
 
   @@id([cartId, productId])
   @@map("cart_items")
@@ -72,6 +88,9 @@ model Order {
   status     String   @default("completed")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  user  User        @relation(fields: [userId], references: [id], onDelete: NoAction)
+  items OrderItem[]
+
   @@map("orders")
 }
 
@@ -80,6 +99,9 @@ model OrderItem {
   productId  Int @map("product_id")
   qty        Int
   priceCents Int @map("price_cents")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: NoAction)
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction)
 
   @@id([orderId, productId])
   @@map("order_items")

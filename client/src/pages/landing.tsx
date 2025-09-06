@@ -45,8 +45,22 @@ export default function Landing() {
       });
 
       if (response.ok) {
-        await refetch();
-        window.location.href = "/";
+        if (isLogin) {
+          await refetch();
+          window.location.href = "/";
+        } else {
+          // After successful registration, switch to login tab
+          setIsLogin(true);
+          setFormData({
+            email: formData.email,
+            password: "",
+            firstName: "",
+            lastName: "",
+            username: "",
+            confirmPassword: "",
+          });
+          setError("");
+        }
       } else {
         const data = await response.json();
         setError(data.message || "An error occurred");

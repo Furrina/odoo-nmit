@@ -56,13 +56,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product routes
   app.get('/api/products', async (req, res) => {
     try {
-      const { categoryId, search, limit = "20", offset = "0" } = req.query;
+      const { categoryId, search, limit = "20", offset = "0", sortBy = "newest" } = req.query;
       
       const filters = {
         categoryId: categoryId ? parseInt(categoryId as string) : undefined,
         search: search as string,
         limit: parseInt(limit as string),
         offset: parseInt(offset as string),
+        sortBy: sortBy as string,
       };
       
       const products = await storage.getProducts(filters);
@@ -275,7 +276,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         items: orderItems,
       });
       
-      // Clear cart
+      // Mark products as sold and clear cart
+      for (const item of cartData.items) {
+        await storage.updateProduct(item.productId, { status: "sold" });
+      }
       await storage.clearCart(userId);
       
       res.status(201).json(order);

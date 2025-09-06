@@ -4,9 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface ProductListProps {
   products: any[];
   isLoading: boolean;
+  groupByCategory?: boolean;
 }
 
-export default function ProductList({ products, isLoading }: ProductListProps) {
+export default function ProductList({ products, isLoading, groupByCategory = false }: ProductListProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="grid-products-loading">
@@ -33,6 +34,35 @@ export default function ProductList({ products, isLoading }: ProductListProps) {
           No products found
         </h3>
         <p className="text-muted-foreground">Try adjusting your search or filters</p>
+      </div>
+    );
+  }
+
+  if (groupByCategory) {
+    // Group products by category
+    const groupedProducts = products.reduce((acc, product) => {
+      const categoryName = product.category?.name || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(product);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return (
+      <div className="space-y-8" data-testid="grouped-products">
+        {Object.entries(groupedProducts).map(([categoryName, categoryProducts]) => (
+          <div key={categoryName}>
+            <h3 className="text-xl font-semibold text-foreground mb-4 border-b border-border pb-2">
+              {categoryName} ({categoryProducts.length})
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {categoryProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
