@@ -4,7 +4,7 @@
 
 EcoFinds is a modern, sustainable e-commerce marketplace focused on pre-loved items. It's a full-stack web application that allows users to buy and sell second-hand goods, promoting sustainable shopping practices and reducing waste.
 
- ### Team: ___Epoch Wizards___
+ ### Team: ___HackOps___
 ---
  <!-- ### <ins>__Team members with email__</ins>  -->
  
